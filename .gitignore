@@ -87,6 +87,8 @@ celerybeat-schedule
 .venv
 venv/
 ENV/
+Pipfile
+Pipfile.lock
 
 # Spyder project settings
 .spyderproject
@@ -103,3 +105,4 @@ ENV/
 
 # IDE settings
 .vscode/
+.idea/

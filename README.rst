@@ -6,7 +6,7 @@ sglearn
 .. image:: https://img.shields.io/pypi/v/sglearn.svg
         :target: https://pypi.python.org/pypi/sglearn
 
-.. image:: https://img.shields.io/travis/gpp-rnd/sglearn.svg
+.. image:: https://travis-ci.com/gpp-rnd/sglearn.svg?branch=master
         :target: https://travis-ci.com/gpp-rnd/sglearn
 
 .. image:: https://readthedocs.org/projects/sglearn/badge/?version=latest
