@@ -245,40 +245,79 @@ def get_context_order(k, pam_start, pam_length, guide_start, guide_length):
     pam_order = ['P' + str(x) for x in range(1, pam_length + 1)]
     guide_order = [str(x) for x in range(1, guide_length + 1)]
     if pam_start == min(pam_start, guide_start):
-        second_ord = pam_order
-        third_ord = guide_order
+        second_component = pam_order
+        third_component = guide_order
     else:
-        second_ord = guide_order
-        third_ord = pam_order
-    first_ord = ['-' + str(x) for x in reversed(range(1, min(pam_start, guide_start)))]
-    fourth_ord = ['+' + str(x) for x in range(1, k - (len(first_ord) + len(second_ord) + len(third_ord)) + 1)]
-    context_order = first_ord + second_ord + third_ord + fourth_ord
+        second_component = guide_order
+        third_component = pam_order
+    first_ord = ['-' + str(x) for x in reversed(range(1, min(pam_start, guide_start) + 1))]
+    fourth_ord = ['+' + str(x) for x in range(1, k - (len(first_ord) + len(second_component) +
+                                                      len(third_component)) + 1)]
+    context_order = first_ord + second_component + third_component + fourth_ord
     return context_order
 
 
 def get_guide_sequence(context, guide_start, guide_length):
-    return context[(guide_start - 1):(guide_start + guide_length - 1)]
+    return context[(guide_start):(guide_start + guide_length)]
+
+
+def get_pam_interaction(feature_dict, context_sequence, nts, context_order, pam_ends):
+    """One hot encode three nucleotides
+
+    Parameters
+    ----------
+    feature_dict: dict
+        Feature dictionary
+    context_sequence: str
+        Context sequence
+    nts: list
+        List of nucleotides
+    context_order: list
+        Position of context
+
+    Returns
+    -------
+    dict
+        Feature dictionary
+    """
+    l_pam_index = pam_ends[0]
+    l_pam_context = context_order[l_pam_index]
+    l_pam_nt = context_sequence[l_pam_index]
+    r_pam_index = pam_ends[1]
+    r_pam_context = context_order[r_pam_index]
+    r_pam_nt = context_sequence[r_pam_index]
+    for nt1 in nts:
+        for nt2 in nts:
+            key = l_pam_context + nt1 + '_' + r_pam_context + nt2
+            if (l_pam_nt == nt1) & (r_pam_nt == nt2):
+                feature_dict[key] = 1
+            else:
+                feature_dict[key] = 0
+    return feature_dict
 
 
 def featurize_guides(kmers, features=None,
-                     pam_start=25, pam_length=3,
-                     guide_start=5, guide_length=20):
+                     pam_start=24, pam_length=3,
+                     guide_start=4, guide_length=20,
+                     pam_interaction=(24, 27)):
     """Featurize a list of guide sequences
 
     Parameters
     ----------
-    kmers: list
+    kmers: list of str
         Context sequences
-    features: list, optional
+    features: list of str, optional
         List of features. Will default to rule set 2 features
     guide_start: int
-        Position of guide start, one-indexed
+        Position of guide start, zero-indexed
     guide_length: int
         Length of guide
     pam_start: int
-        Position of pam start, one-indexed
-    pam_len: int
+        Position of pam start, zero-indexed
+    pam_length: int
         Length of PAM
+    pam_interaction: tuple
+        Location on either side of the pam, zero-indexed
 
     Returns
     -------
@@ -289,13 +328,14 @@ def featurize_guides(kmers, features=None,
         # RS2
         features = ['Pos. Ind. 1mer', 'Pos. Ind. 2mer',
                     'Pos. Dep. 1mer', 'Pos. Dep. 2mer',
-                    'GC content', 'Tm']
+                    'PAM interaction', 'GC content', 'Tm']
     possible_feats = {'Pos. Ind. 1mer', 'Pos. Ind. 2mer', 'Pos. Ind. 3mer',
                       'Pos. Dep. 1mer', 'Pos. Dep. 2mer',
-                      'Pos. Dep. 3mer', 'GC content', 'Tm'}
+                      'Pos. Dep. 3mer', 'GC content', 'Tm', 
+                      'PAM interaction'}
     if not set(features).issubset(possible_feats):
-        diff = features - possible_feats
-        assert ValueError(str(diff) + 'Are not currently supported as features')
+        diff = set(features) - possible_feats
+        assert ValueError(str(diff) + ' are not currently supported as features')
     k = len(kmers[0])
     context_order = get_context_order(k, pam_start, pam_length, guide_start, guide_length)
     nts = ['A', 'C', 'T', 'G']
@@ -318,6 +358,8 @@ def featurize_guides(kmers, features=None,
             curr_dict = get_two_nt_pos(curr_dict, context, nts, context_order)
         if 'Pos. Dep. 3mer' in features:
             curr_dict = get_three_nt_pos(curr_dict, context, nts, context_order)
+        if 'PAM interaction' in features:
+            curr_dict = get_pam_interaction(curr_dict, context, nts, context_order, pam_interaction)
         if 'Tm' in features:
             curr_dict = get_thermo(curr_dict, guide_sequence, context)
         feature_dict_list.append(curr_dict)
