@@ -11,17 +11,11 @@ def get_frac_g_or_c(feature_dict, guide_sequence):
         Feature dictionary
     guide_sequence: str
         Guide sequence
-
-    Returns
-    -------
-    dict
-        Feature dictionary
     """
     g_count = guide_sequence.count('G')
     c_count = guide_sequence.count('C')
     gc_frac = (g_count + c_count)/len(guide_sequence)
     feature_dict['GC content'] = gc_frac
-    return feature_dict
 
 
 def get_one_nt_frac(feature_dict, guide, nts):
@@ -35,16 +29,10 @@ def get_one_nt_frac(feature_dict, guide, nts):
         Guide sequence
     nts: list
         List of nucleotides
-
-    Returns
-    -------
-    dict
-        Feature dictionary
     """
     for nt in nts:
         nt_frac = guide.count(nt)/len(guide)
         feature_dict[nt] = nt_frac
-    return feature_dict
 
 
 def get_two_nt_frac(feature_dict, guide, nts):
@@ -58,11 +46,6 @@ def get_two_nt_frac(feature_dict, guide, nts):
         Guide sequence
     nts: list
         List of nucleotides
-
-    Returns
-    -------
-    dict
-        Feature dictionary
     """
     for nt1 in nts:
         for nt2 in nts:
@@ -70,7 +53,6 @@ def get_two_nt_frac(feature_dict, guide, nts):
             nts_counts = guide.count(two_mer)
             nts_frac = nts_counts/(len(guide) - 1)
             feature_dict[nt1 + nt2] = nts_frac
-    return feature_dict
 
 
 def get_three_nt_counts(feature_dict, guide, nts):
@@ -84,11 +66,6 @@ def get_three_nt_counts(feature_dict, guide, nts):
         Guide sequence
     nts: list
         List of nucleotides
-
-    Returns
-    -------
-    dict
-        Feature dictionary
     """
     for nt1 in nts:
         for nt2 in nts:
@@ -97,7 +74,6 @@ def get_three_nt_counts(feature_dict, guide, nts):
                 nts_counts = guide.count(k_mer)
                 nts_frac = nts_counts/(len(guide) - 2)
                 feature_dict[nt1 + nt2 + nt3] = nts_frac
-    return feature_dict
 
 
 def get_one_nt_pos(feature_dict, context_sequence, nts, context_order):
@@ -113,11 +89,6 @@ def get_one_nt_pos(feature_dict, context_sequence, nts, context_order):
         List of nucleotides
     context_order: list
         Position of context
-
-    Returns
-    -------
-    dict
-        Feature dictionary
     """
     for i in range(len(context_order)):
         curr_nt = context_sequence[i]
@@ -127,7 +98,6 @@ def get_one_nt_pos(feature_dict, context_sequence, nts, context_order):
                 feature_dict[key] = 1
             else:
                 feature_dict[key] = 0
-    return feature_dict
 
 
 def get_two_nt_pos(feature_dict, context_sequence, nts, context_order):
@@ -143,11 +113,6 @@ def get_two_nt_pos(feature_dict, context_sequence, nts, context_order):
             List of nucleotides
         context_order: list
             Position of context
-
-        Returns
-        -------
-        dict
-            Feature dictionary
     """
     for i in range(len(context_order) - 1):
         curr_nts = context_sequence[i:i+2]
@@ -159,7 +124,6 @@ def get_two_nt_pos(feature_dict, context_sequence, nts, context_order):
                     feature_dict[key] = 1
                 else:
                     feature_dict[key] = 0
-    return feature_dict
 
 
 def get_three_nt_pos(feature_dict, context_sequence, nts, context_order):
@@ -175,11 +139,6 @@ def get_three_nt_pos(feature_dict, context_sequence, nts, context_order):
             List of nucleotides
         context_order: list
             Position of context
-
-        Returns
-        -------
-        dict
-            Feature dictionary
     """
     for i in range(len(context_order) - 2):
         curr_nts = context_sequence[i:i+3]
@@ -192,33 +151,82 @@ def get_three_nt_pos(feature_dict, context_sequence, nts, context_order):
                         feature_dict[key] = 1
                     else:
                         feature_dict[key] = 0
-    return feature_dict
 
 
 def get_thermo(feature_dict, guide_sequence, context_sequence):
     """Use Biopython to get thermo info. from context and guides
 
-            Parameters
-            ----------
-            feature_dict: dict
-                Feature dictionary
-            guide_sequence: str
-                Guide sequence
-            context_sequence: str
-                Context sequence
-
-            Returns
-            -------
-            dict
-                Feature dictionary
-        """
-    #
-    feature_dict['Tm, context'] = MeltingTemp.Tm_NN(context_sequence)
+        Parameters
+        ----------
+        feature_dict: dict
+            Feature dictionary
+        guide_sequence: str
+            Guide sequence
+        context_sequence: str
+            Context sequence
+    """
+    feature_dict['Tm context'] = MeltingTemp.Tm_NN(context_sequence)
+    feature_dict['Tm guide'] = MeltingTemp.Tm_NN(guide_sequence)
     third = len(guide_sequence)//3
-    feature_dict['Tm, start'] = MeltingTemp.Tm_NN(guide_sequence[0:third])
-    feature_dict['Tm, mid'] = MeltingTemp.Tm_NN(guide_sequence[third:2 * third])
-    feature_dict['Tm, end'] = MeltingTemp.Tm_NN(guide_sequence[2 * third:])
-    return feature_dict
+    feature_dict['Tm start'] = MeltingTemp.Tm_NN(guide_sequence[0:third])
+    feature_dict['Tm mid'] = MeltingTemp.Tm_NN(guide_sequence[third:2 * third])
+    feature_dict['Tm end'] = MeltingTemp.Tm_NN(guide_sequence[2 * third:])
+
+
+def get_pam_interaction(feature_dict, context_sequence, nts, context_order, pam_ends):
+    """One hot encode interactions on either side of the PAM sequence
+
+    Parameters
+    ----------
+    feature_dict: dict
+        Feature dictionary
+    context_sequence: str
+        Context sequence
+    nts: list
+        List of nucleotides
+    context_order: list
+        Position of context
+    pam_ends: tuple
+        Location on either side of the pam, zero-indexed
+    """
+    l_pam_index = pam_ends[0]
+    l_pam_context = context_order[l_pam_index]
+    l_pam_nt = context_sequence[l_pam_index]
+    r_pam_index = pam_ends[1]
+    r_pam_context = context_order[r_pam_index]
+    r_pam_nt = context_sequence[r_pam_index]
+    for nt1 in nts:
+        for nt2 in nts:
+            key = l_pam_context + nt1 + '_' + r_pam_context + nt2
+            if (l_pam_nt == nt1) & (r_pam_nt == nt2):
+                feature_dict[key] = 1
+            else:
+                feature_dict[key] = 0
+
+
+def get_polyn(feature_dict, guide_sequence, nts):
+    """Get max run for each nucleotide
+
+    Parameters
+    ----------
+    feature_dict: dict
+        Feature dictionary
+    guide_sequence: str
+        Guide sequence
+    nts: list
+        List of nucleotides
+    """
+    for nt in nts:
+        lng = 0
+        cnt = 0
+        for c in guide_sequence:
+            if c == nt:
+                cnt += 1
+            else:
+                lng = max(lng, cnt)
+                cnt = 0
+        lng = max(lng, cnt)
+        feature_dict['Poly' + nt] = lng
 
 
 def get_context_order(k, pam_start, pam_length, guide_start, guide_length):
@@ -258,42 +266,7 @@ def get_context_order(k, pam_start, pam_length, guide_start, guide_length):
 
 
 def get_guide_sequence(context, guide_start, guide_length):
-    return context[(guide_start):(guide_start + guide_length)]
-
-
-def get_pam_interaction(feature_dict, context_sequence, nts, context_order, pam_ends):
-    """One hot encode three nucleotides
-
-    Parameters
-    ----------
-    feature_dict: dict
-        Feature dictionary
-    context_sequence: str
-        Context sequence
-    nts: list
-        List of nucleotides
-    context_order: list
-        Position of context
-
-    Returns
-    -------
-    dict
-        Feature dictionary
-    """
-    l_pam_index = pam_ends[0]
-    l_pam_context = context_order[l_pam_index]
-    l_pam_nt = context_sequence[l_pam_index]
-    r_pam_index = pam_ends[1]
-    r_pam_context = context_order[r_pam_index]
-    r_pam_nt = context_sequence[r_pam_index]
-    for nt1 in nts:
-        for nt2 in nts:
-            key = l_pam_context + nt1 + '_' + r_pam_context + nt2
-            if (l_pam_nt == nt1) & (r_pam_nt == nt2):
-                feature_dict[key] = 1
-            else:
-                feature_dict[key] = 0
-    return feature_dict
+    return context[guide_start:(guide_start + guide_length)]
 
 
 def featurize_guides(kmers, features=None,
@@ -325,14 +298,14 @@ def featurize_guides(kmers, features=None,
         Nucleotide features
     """
     if features is None:
-        # RS2
         features = ['Pos. Ind. 1mer', 'Pos. Ind. 2mer',
                     'Pos. Dep. 1mer', 'Pos. Dep. 2mer',
-                    'PAM interaction', 'GC content', 'Tm']
+                    'PAM interaction', 'GC content', 'Tm',
+                    'PolyN']
     possible_feats = {'Pos. Ind. 1mer', 'Pos. Ind. 2mer', 'Pos. Ind. 3mer',
                       'Pos. Dep. 1mer', 'Pos. Dep. 2mer',
-                      'Pos. Dep. 3mer', 'GC content', 'Tm', 
-                      'PAM interaction'}
+                      'Pos. Dep. 3mer', 'GC content', 'Tm',
+                      'PAM interaction', 'PolyN'}
     if not set(features).issubset(possible_feats):
         diff = set(features) - possible_feats
         assert ValueError(str(diff) + ' are not currently supported as features')
@@ -345,23 +318,25 @@ def featurize_guides(kmers, features=None,
         context = kmers[i]
         guide_sequence = get_guide_sequence(context, guide_start, guide_length)
         if 'GC content' in features:
-            curr_dict = get_frac_g_or_c(curr_dict, guide_sequence)
+            get_frac_g_or_c(curr_dict, guide_sequence)
         if 'Pos. Ind. 1mer' in features:
-            curr_dict = get_one_nt_frac(curr_dict, guide_sequence, nts)
+            get_one_nt_frac(curr_dict, guide_sequence, nts)
         if 'Pos. Ind. 2mer' in features:
-            curr_dict = get_two_nt_frac(curr_dict, guide_sequence, nts)
+            get_two_nt_frac(curr_dict, guide_sequence, nts)
         if 'Pos. Ind. 3mer' in features:
-            curr_dict = get_three_nt_counts(curr_dict, guide_sequence, nts)
+            get_three_nt_counts(curr_dict, guide_sequence, nts)
         if 'Pos. Dep. 1mer' in features:
-            curr_dict = get_one_nt_pos(curr_dict, context, nts, context_order)
+            get_one_nt_pos(curr_dict, context, nts, context_order)
         if 'Pos. Dep. 2mer' in features:
-            curr_dict = get_two_nt_pos(curr_dict, context, nts, context_order)
+            get_two_nt_pos(curr_dict, context, nts, context_order)
         if 'Pos. Dep. 3mer' in features:
-            curr_dict = get_three_nt_pos(curr_dict, context, nts, context_order)
+            get_three_nt_pos(curr_dict, context, nts, context_order)
         if 'PAM interaction' in features:
-            curr_dict = get_pam_interaction(curr_dict, context, nts, context_order, pam_interaction)
+            get_pam_interaction(curr_dict, context, nts, context_order, pam_interaction)
         if 'Tm' in features:
-            curr_dict = get_thermo(curr_dict, guide_sequence, context)
+            get_thermo(curr_dict, guide_sequence, context)
+        if 'PolyN' in features:
+            get_polyn(curr_dict, guide_sequence, nts)
         feature_dict_list.append(curr_dict)
     feature_matrix = pd.DataFrame(feature_dict_list)
     feature_matrix.index = kmers
