@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """Tests for `sglearn` package."""
 
 from sglearn import featurization as ft
@@ -45,12 +43,12 @@ def test_featurization():
                 'Pos. Dep. 3mer',
                 'GC content',
                 'Tm']
-    kmers = pd.Series(['ACTGGTGGG'])
+    kmers = pd.Series(['ACTGGTGGG', 'ACTGATGGG'])
     features = ft.featurize_guides(kmers, features, guide_start=2, guide_length=6, pam_start=1, pam_length=1).iloc[0]
     assert (features['1T'] == 1)
     assert (features['TGG'] == 0.5)
     assert (features['GC content'] == 2/3)
-    assert (features['Tm, context'] != 0)
+    assert (features['Tm context'] != 0)
     assert (features['-1AC'] == 1)
     assert (features['5GGG'] == 1)
     assert (features['G'] == 2/3)
@@ -59,7 +57,8 @@ def test_featurization():
 
 
 def test_get_pam_interaction():
-    feature_dict = ft.get_pam_interaction({}, 'AGGCT', ['A', 'C', 'T', 'G'], ['20', 'P1', 'P2', 'P3', '+1'], (0, 3))
+    feature_dict = {}
+    ft.get_pam_interaction(feature_dict, 'AGGCT', ['A', 'C', 'T', 'G'], ['20', 'P1', 'P2', 'P3', '+1'], (0, 3))
     assert feature_dict['20A_P3C'] == 1
     assert feature_dict['20A_P3T'] == 0
 
@@ -73,3 +72,12 @@ def test_training(azimuth_training):
     model.fit(x, y)
     predictions = model.predict(x)
     assert stats.pearsonr(azimuth_training['predictions'], predictions)[0] > 0.94
+
+
+def test_polyn():
+    curr_dict = {}
+    ft.get_polyn(curr_dict, 'TAACCAAACCA', nts=['A', 'C', 'T', 'G'])
+    assert curr_dict['PolyA'] == 3
+    assert curr_dict['PolyT'] == 1
+    assert curr_dict['PolyC'] == 2
+    assert curr_dict['PolyG'] == 0
