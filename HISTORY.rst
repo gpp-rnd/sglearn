@@ -21,3 +21,11 @@ History
 ------------------
 
 * Added pam interaction feature
+
+0.2.0 (2021-04-13)
+------------------
+
+* Added PolyN feature
+* Added Tm guide feature
+* Removed return values from feature dict functions
+* Remove comma from Tm feature names
