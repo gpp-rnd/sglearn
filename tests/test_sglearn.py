@@ -49,6 +49,7 @@ def test_featurization():
     assert (features['TGG'] == 0.5)
     assert (features['GC content'] == 2/3)
     assert (features['Tm context'] != 0)
+    assert (features['Tm start'] != 0)
     assert (features['-1AC'] == 1)
     assert (features['5GGG'] == 1)
     assert (features['G'] == 2/3)
@@ -71,7 +72,7 @@ def test_training(azimuth_training):
     model = GradientBoostingRegressor()
     model.fit(x, y)
     predictions = model.predict(x)
-    assert stats.pearsonr(azimuth_training['predictions'], predictions)[0] > 0.94
+    assert stats.pearsonr(azimuth_training['predictions'], predictions)[0] > 0.93
 
 
 def test_polyn():
