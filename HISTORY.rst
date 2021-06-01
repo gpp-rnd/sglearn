@@ -29,3 +29,8 @@ History
 * Added Tm guide feature
 * Removed return values from feature dict functions
 * Remove comma from Tm feature names
+
+1.0.0 (2021-06-01)
+------------------
+
+* Change DNA hybridization calculation to RNA/DNA hybridization for guide sequence
