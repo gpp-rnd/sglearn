@@ -34,3 +34,8 @@ History
 ------------------
 
 * Change DNA hybridization calculation to RNA/DNA hybridization for guide sequence
+
+1.1.0 (2021-06-04)
+------------------
+
+* Use RNA/DNA and DNA/DNA melting temperatures
