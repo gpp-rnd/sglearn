@@ -165,12 +165,16 @@ def get_thermo(feature_dict, guide_sequence, context_sequence):
         context_sequence: str
             Context sequence
     """
-    feature_dict['Tm context'] = MeltingTemp.Tm_NN(context_sequence)
-    feature_dict['Tm guide'] = MeltingTemp.Tm_NN(guide_sequence, nn_table=MeltingTemp.R_DNA_NN1)
+    feature_dict['Tm context DD'] = MeltingTemp.Tm_NN(context_sequence)
+    feature_dict['Tm guide DD'] = MeltingTemp.Tm_NN(guide_sequence)
+    feature_dict['Tm guide RD'] = MeltingTemp.Tm_NN(guide_sequence, nn_table=MeltingTemp.R_DNA_NN1)
     third = len(guide_sequence)//3
-    feature_dict['Tm start'] = MeltingTemp.Tm_NN(guide_sequence[0:third], nn_table=MeltingTemp.R_DNA_NN1)
-    feature_dict['Tm mid'] = MeltingTemp.Tm_NN(guide_sequence[third:2 * third], nn_table=MeltingTemp.R_DNA_NN1)
-    feature_dict['Tm end'] = MeltingTemp.Tm_NN(guide_sequence[2 * third:], nn_table=MeltingTemp.R_DNA_NN1)
+    feature_dict['Tm start DD'] = MeltingTemp.Tm_NN(guide_sequence[0:third])
+    feature_dict['Tm start RD'] = MeltingTemp.Tm_NN(guide_sequence[0:third], nn_table=MeltingTemp.R_DNA_NN1)
+    feature_dict['Tm mid DD'] = MeltingTemp.Tm_NN(guide_sequence[third:2 * third])
+    feature_dict['Tm mid RD'] = MeltingTemp.Tm_NN(guide_sequence[third:2 * third], nn_table=MeltingTemp.R_DNA_NN1)
+    feature_dict['Tm end DD'] = MeltingTemp.Tm_NN(guide_sequence[2 * third:])
+    feature_dict['Tm end RD'] = MeltingTemp.Tm_NN(guide_sequence[2 * third:], nn_table=MeltingTemp.R_DNA_NN1)
 
 
 def get_pam_interaction(feature_dict, context_sequence, nts, context_order, pam_ends):
