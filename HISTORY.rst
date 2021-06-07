@@ -39,3 +39,8 @@ History
 ------------------
 
 * Use RNA/DNA and DNA/DNA melting temperatures
+
+1.2.0 (2021-06-08)
+------------------
+
+* Add RNA/RNA melting temperatures
