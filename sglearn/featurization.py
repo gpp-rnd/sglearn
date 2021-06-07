@@ -1,6 +1,7 @@
 import pandas as pd
 from Bio.SeqUtils import MeltingTemp
-
+from seqfold import dg
+import math
 
 def get_frac_g_or_c(feature_dict, guide_sequence):
     """Get gc content
@@ -153,7 +154,7 @@ def get_three_nt_pos(feature_dict, context_sequence, nts, context_order):
                         feature_dict[key] = 0
 
 
-def get_thermo(feature_dict, guide_sequence, context_sequence):
+def get_thermo(feature_dict, guide_sequence, sections):
     """Use Biopython to get thermo info. from context and guides
 
         Parameters
@@ -162,19 +163,28 @@ def get_thermo(feature_dict, guide_sequence, context_sequence):
             Feature dictionary
         guide_sequence: str
             Guide sequence
-        context_sequence: str
-            Context sequence
+        sections: iterable of int
+            Section of guide sequence
+
     """
-    feature_dict['Tm context DD'] = MeltingTemp.Tm_NN(context_sequence)
-    feature_dict['Tm guide DD'] = MeltingTemp.Tm_NN(guide_sequence)
-    feature_dict['Tm guide RD'] = MeltingTemp.Tm_NN(guide_sequence, nn_table=MeltingTemp.R_DNA_NN1)
-    third = len(guide_sequence)//3
-    feature_dict['Tm start DD'] = MeltingTemp.Tm_NN(guide_sequence[0:third])
-    feature_dict['Tm start RD'] = MeltingTemp.Tm_NN(guide_sequence[0:third], nn_table=MeltingTemp.R_DNA_NN1)
-    feature_dict['Tm mid DD'] = MeltingTemp.Tm_NN(guide_sequence[third:2 * third])
-    feature_dict['Tm mid RD'] = MeltingTemp.Tm_NN(guide_sequence[third:2 * third], nn_table=MeltingTemp.R_DNA_NN1)
-    feature_dict['Tm end DD'] = MeltingTemp.Tm_NN(guide_sequence[2 * third:])
-    feature_dict['Tm end RD'] = MeltingTemp.Tm_NN(guide_sequence[2 * third:], nn_table=MeltingTemp.R_DNA_NN1)
+    feature_dict['Tm DD guide'] = MeltingTemp.Tm_NN(guide_sequence)
+    feature_dict['Tm RD guide'] = MeltingTemp.Tm_NN(guide_sequence, nn_table=MeltingTemp.R_DNA_NN1)
+    tm_rr = dg(guide_sequence.replace('T', 'U'))
+    if tm_rr == -math.inf:
+        feature_dict['Tm RR guide'] = -100
+    elif tm_rr == math.inf:
+        feature_dict['Tm RR guide'] = 105
+    elif tm_rr == 1600:
+        feature_dict['Tm RR guide'] = 100
+    else:
+        feature_dict['Tm RR guide'] = tm_rr
+    section_start = 0
+    for s in sections:
+        section_end = s
+        feature_name = 'Tm RD ' + str(int(section_start + 1)) + ' to ' + str(int(section_end))
+        feature_dict[feature_name] = MeltingTemp.Tm_NN(guide_sequence[section_start:section_end],
+                                                       nn_table=MeltingTemp.R_DNA_NN1)
+        section_start = section_end
 
 
 def get_pam_interaction(feature_dict, context_sequence, nts, context_order, pam_ends):
@@ -276,7 +286,8 @@ def get_guide_sequence(context, guide_start, guide_length):
 def featurize_guides(kmers, features=None,
                      pam_start=24, pam_length=3,
                      guide_start=4, guide_length=20,
-                     pam_interaction=(24, 27)):
+                     pam_interaction=(24, 27),
+                     guide_sections=(10, 20)):
     """Featurize a list of guide sequences
 
     Parameters
@@ -338,7 +349,7 @@ def featurize_guides(kmers, features=None,
         if 'PAM interaction' in features:
             get_pam_interaction(curr_dict, context, nts, context_order, pam_interaction)
         if 'Tm' in features:
-            get_thermo(curr_dict, guide_sequence, context)
+            get_thermo(curr_dict, guide_sequence, guide_sections)
         if 'PolyN' in features:
             get_polyn(curr_dict, guide_sequence, nts)
         feature_dict_list.append(curr_dict)

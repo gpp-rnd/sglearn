@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from sklearn.ensemble import GradientBoostingRegressor
 from scipy import stats
-
+import math
 
 @pytest.fixture
 def azimuth_training():
@@ -44,12 +44,14 @@ def test_featurization():
                 'GC content',
                 'Tm']
     kmers = pd.Series(['ACTGGTGGG', 'ACTGATGGG'])
-    features = ft.featurize_guides(kmers, features, guide_start=2, guide_length=6, pam_start=1, pam_length=1).iloc[0]
+    features = ft.featurize_guides(kmers, features, guide_start=2, guide_length=6, pam_start=1, pam_length=1,
+                                   guide_sections=(3, 6)).iloc[0]
     assert (features['1T'] == 1)
     assert (features['TGG'] == 0.5)
     assert (features['GC content'] == 2/3)
-    assert (features['Tm context DD'] != 0)
-    assert (features['Tm start RD'] != 0)
+    assert (features['Tm DD guide'] != 0)
+    assert (features['Tm RR guide'] == -100)
+    assert (features['Tm RD 1 to 3'] != 0)
     assert (features['-1AC'] == 1)
     assert (features['5GGG'] == 1)
     assert (features['G'] == 2/3)
@@ -73,6 +75,10 @@ def test_training(azimuth_training):
     model.fit(x, y)
     predictions = model.predict(x)
     assert stats.pearsonr(azimuth_training['predictions'], predictions)[0] > 0.93
+    feature_importance = (pd.DataFrame({'feature': x.columns, 'importance': model.feature_importances_})
+                          .sort_values('importance', ascending=False))
+    assert '20G' in feature_importance['feature'].values[:10]
+
 
 
 def test_polyn():
