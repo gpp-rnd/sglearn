@@ -44,3 +44,8 @@ History
 ------------------
 
 * Add RNA/RNA melting temperatures
+
+1.2.1 (2021-06-08)
+------------------
+
+* Shrink RNA/RNA tm window for outliers
