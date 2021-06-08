@@ -171,11 +171,11 @@ def get_thermo(feature_dict, guide_sequence, sections):
     feature_dict['Tm RD guide'] = MeltingTemp.Tm_NN(guide_sequence, nn_table=MeltingTemp.R_DNA_NN1)
     tm_rr = dg(guide_sequence.replace('T', 'U'))
     if tm_rr == -math.inf:
-        feature_dict['Tm RR guide'] = -100
+        feature_dict['Tm RR guide'] = -20
     elif tm_rr == math.inf:
-        feature_dict['Tm RR guide'] = 105
+        feature_dict['Tm RR guide'] = 8
     elif tm_rr == 1600:
-        feature_dict['Tm RR guide'] = 100
+        feature_dict['Tm RR guide'] = 7
     else:
         feature_dict['Tm RR guide'] = tm_rr
     section_start = 0
