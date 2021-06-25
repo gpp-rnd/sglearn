@@ -54,3 +54,8 @@ History
 ------------------
 
 * Rename Tm RR to DG RR
+
+1.2.3 (2021-06-25)
+------------------
+
+* Update Travis
