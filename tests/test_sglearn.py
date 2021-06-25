@@ -5,7 +5,6 @@ import pandas as pd
 import pytest
 from sklearn.ensemble import GradientBoostingRegressor
 from scipy import stats
-import math
 
 @pytest.fixture
 def azimuth_training():
@@ -50,7 +49,7 @@ def test_featurization():
     assert (features['TGG'] == 0.5)
     assert (features['GC content'] == 2/3)
     assert (features['Tm DD guide'] != 0)
-    assert (features['Tm RR guide'] == -20)
+    assert (features['DG RR guide'] == -20)
     assert (features['Tm RD 1 to 3'] != 0)
     assert (features['-1AC'] == 1)
     assert (features['5GGG'] == 1)
