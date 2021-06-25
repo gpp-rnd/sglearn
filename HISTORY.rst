@@ -49,3 +49,8 @@ History
 ------------------
 
 * Shrink RNA/RNA tm window for outliers
+
+1.2.2 (2021-06-25)
+------------------
+
+* Rename Tm RR to DG RR
