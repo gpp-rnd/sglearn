@@ -10,7 +10,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ['pandas>=1.1', 'biopython>=1.77', 'seqfold>=0.7.7']
+requirements = ['pandas>=1.1', 'biopython>=1.77', 'seqfold>=0.7.7', 'joblib>=1.0.1', 'tqdm>=4.60.0', ]
 
 setup_requirements = ['pytest-runner', ]
 

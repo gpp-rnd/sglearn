@@ -66,7 +66,7 @@ def test_get_pam_interaction():
 
 
 def test_training(azimuth_training):
-    featurized_guides = ft.featurize_guides(azimuth_training['30mer'])
+    featurized_guides = ft.featurize_guides(azimuth_training['30mer'], n_jobs=2)
     y = azimuth_training['score_drug_gene_rank']
     x = pd.concat([featurized_guides.reset_index(drop=True),
                    azimuth_training['Percent Peptide']], axis=1)
