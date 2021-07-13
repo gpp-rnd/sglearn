@@ -2,6 +2,8 @@ import pandas as pd
 from Bio.SeqUtils import MeltingTemp
 from seqfold import dg
 import math
+from joblib import Parallel, delayed
+from tqdm import tqdm
 
 def get_frac_g_or_c(feature_dict, guide_sequence):
     """Get gc content
@@ -283,11 +285,39 @@ def get_guide_sequence(context, guide_start, guide_length):
     return context[guide_start:(guide_start + guide_length)]
 
 
+def build_feature_dict(context, guide_start, guide_length, features, nts, context_order,
+                       pam_interaction, guide_sections):
+    curr_dict = {}
+    guide_sequence = get_guide_sequence(context, guide_start, guide_length)
+    if 'GC content' in features:
+        get_frac_g_or_c(curr_dict, guide_sequence)
+    if 'Pos. Ind. 1mer' in features:
+        get_one_nt_frac(curr_dict, guide_sequence, nts)
+    if 'Pos. Ind. 2mer' in features:
+        get_two_nt_frac(curr_dict, guide_sequence, nts)
+    if 'Pos. Ind. 3mer' in features:
+        get_three_nt_counts(curr_dict, guide_sequence, nts)
+    if 'Pos. Dep. 1mer' in features:
+        get_one_nt_pos(curr_dict, context, nts, context_order)
+    if 'Pos. Dep. 2mer' in features:
+        get_two_nt_pos(curr_dict, context, nts, context_order)
+    if 'Pos. Dep. 3mer' in features:
+        get_three_nt_pos(curr_dict, context, nts, context_order)
+    if 'PAM interaction' in features:
+        get_pam_interaction(curr_dict, context, nts, context_order, pam_interaction)
+    if 'Tm' in features:
+        get_thermo(curr_dict, guide_sequence, guide_sections)
+    if 'PolyN' in features:
+        get_polyn(curr_dict, guide_sequence, nts)
+    return curr_dict
+
+
 def featurize_guides(kmers, features=None,
                      pam_start=24, pam_length=3,
                      guide_start=4, guide_length=20,
                      pam_interaction=(24, 27),
-                     guide_sections=(10, 20)):
+                     guide_sections=(10, 20),
+                     n_jobs=1):
     """Featurize a list of guide sequences
 
     Parameters
@@ -327,32 +357,9 @@ def featurize_guides(kmers, features=None,
     k = len(kmers[0])
     context_order = get_context_order(k, pam_start, pam_length, guide_start, guide_length)
     nts = ['A', 'C', 'T', 'G']
-    feature_dict_list = []
-    for i in range(len(kmers)):
-        curr_dict = {}
-        context = kmers[i]
-        guide_sequence = get_guide_sequence(context, guide_start, guide_length)
-        if 'GC content' in features:
-            get_frac_g_or_c(curr_dict, guide_sequence)
-        if 'Pos. Ind. 1mer' in features:
-            get_one_nt_frac(curr_dict, guide_sequence, nts)
-        if 'Pos. Ind. 2mer' in features:
-            get_two_nt_frac(curr_dict, guide_sequence, nts)
-        if 'Pos. Ind. 3mer' in features:
-            get_three_nt_counts(curr_dict, guide_sequence, nts)
-        if 'Pos. Dep. 1mer' in features:
-            get_one_nt_pos(curr_dict, context, nts, context_order)
-        if 'Pos. Dep. 2mer' in features:
-            get_two_nt_pos(curr_dict, context, nts, context_order)
-        if 'Pos. Dep. 3mer' in features:
-            get_three_nt_pos(curr_dict, context, nts, context_order)
-        if 'PAM interaction' in features:
-            get_pam_interaction(curr_dict, context, nts, context_order, pam_interaction)
-        if 'Tm' in features:
-            get_thermo(curr_dict, guide_sequence, guide_sections)
-        if 'PolyN' in features:
-            get_polyn(curr_dict, guide_sequence, nts)
-        feature_dict_list.append(curr_dict)
+    feature_dict_list = Parallel(n_jobs=n_jobs)(delayed(build_feature_dict)
+                                                (context, guide_start, guide_length, features, nts, context_order,
+                                                 pam_interaction, guide_sections) for context in tqdm(kmers))
     feature_matrix = pd.DataFrame(feature_dict_list)
     feature_matrix.index = kmers
     return feature_matrix
