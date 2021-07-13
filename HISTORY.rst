@@ -59,3 +59,8 @@ History
 ------------------
 
 * Update Travis
+
+1.2.4 (2021-07-13)
+------------------
+
+* Added parallelization
